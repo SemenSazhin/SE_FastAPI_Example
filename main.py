@@ -1,26 +1,31 @@
+from functools import lru_cache
+
 from fastapi import FastAPI
+from fastapi import HTTPException
 from transformers import pipeline
 from pydantic import BaseModel
-
 
 class Item(BaseModel):
     text: str
 
-
 app = FastAPI()
-classifier = pipeline("sentiment-analysis")
 
+maxsize=1
+def get_classifier():
+    return pipeline("sentiment-analysis")
 
 @app.get("/")
 def root():
-    return {"FastApi service started!"}
+    return {"message": "FastAPI service started!"}
 
-
-@app.get("/{text}")
+@app.get("/predict/{text}")
 def get_params(text: str):
-    return classifier(text)
+    if not text.strip():
+        raise HTTPException(status_code=400, detail="Text cannot be empty")
+    return get_classifier()(text)
 
-
-@app.post("/predict/")
+"/predict/"
 def predict(item: Item):
-    return classifier(item.text)
+    if not item.text.strip():
+        raise HTTPException(status_code=400, detail="Text cannot be empty")
+    return get_classifier()(item.text)
